@@ -43,6 +43,21 @@ class PDFSplitterFinal:
         self.ocr_available = False
         self.ocr_processor = None
         
+        # 检查章节检测可用性
+        self.chapter_detector_available = False
+        self.chapter_detector = None
+        
+        try:
+            from pdf_chapter_detector import ChapterDetector
+            self.chapter_detector = ChapterDetector(
+                min_chapter_pages=max(5, pages_per_chapter // 2),
+                max_chapter_pages=min(50, pages_per_chapter * 2)
+            )
+            self.chapter_detector_available = True
+            logger.info("✅ 章节检测器初始化成功")
+        except ImportError:
+            logger.warning("⚠️  章节检测模块不可用，将使用固定页数")
+        
         if self.use_ocr:
             try:
                 from pdf_ocr_processor import PDFOCRProcessor
@@ -71,7 +86,7 @@ class PDFSplitterFinal:
         
         logger.info(f"每章节页数: {pages_per_chapter}")
     
-    def smart_process_pdf(self, input_path, output_dir, force_ocr=False):
+    def smart_process_pdf(self, input_path, output_dir, force_ocr=False, use_smart_detection=True):
         """
         智能处理PDF - 完整流程
         
@@ -79,6 +94,7 @@ class PDFSplitterFinal:
             input_path: 输入PDF文件路径
             output_dir: 输出目录路径
             force_ocr: 强制使用OCR模式
+            use_smart_detection: 是否使用智能章节检测
             
         Returns:
             dict: 处理结果
@@ -143,14 +159,14 @@ class PDFSplitterFinal:
             else:
                 # OCR失败，回退到基础模式
                 logger.warning("OCR处理失败，回退到基础模式")
-                result = self._basic_split_pdf(input_path, output_dir)
+                result = self._basic_split_pdf(input_path, output_dir, use_smart_detection=use_smart_detection)
                 result['processing_mode'] = 'basic_fallback'
                 result['pdf_type'] = pdf_type
             
         else:
             # 基础处理模式
             logger.info("📄 使用基础拆分模式...")
-            result = self._basic_split_pdf(input_path, output_dir)
+            result = self._basic_split_pdf(input_path, output_dir, use_smart_detection=use_smart_detection)
             result['processing_mode'] = 'basic'
             result['pdf_type'] = pdf_type
         
@@ -177,8 +193,8 @@ class PDFSplitterFinal:
         
         return result
     
-    def _basic_split_pdf(self, input_path, output_dir):
-        """基础PDF拆分（回退方法）"""
+    def _basic_split_pdf(self, input_path, output_dir, use_smart_detection=True):
+        """PDF拆分（支持智能章节检测）"""
         try:
             import PyPDF2
             
@@ -192,13 +208,65 @@ class PDFSplitterFinal:
                 if total_pages == 0:
                     return {'success': False, 'error': 'PDF文件没有页面'}
                 
-                # 计算章节数量
-                num_chapters = (total_pages + self.pages_per_chapter - 1) // self.pages_per_chapter
+                # 决定使用哪种拆分方式
+                split_method = 'fixed'
+                chapter_boundaries = []
                 
+                if use_smart_detection and self.chapter_detector_available:
+                    # 尝试智能章节检测
+                    logger.info("尝试智能章节检测...")
+                    
+                    # 提取页面文本
+                    page_texts = {}
+                    sample_pages = min(20, total_pages)  # 采样部分页面以提高速度
+                    
+                    for page_num in range(sample_pages):
+                        try:
+                            page = pdf_reader.pages[page_num]
+                            text = page.extract_text()
+                            if text and len(text.strip()) > 5:
+                                page_texts[page_num] = text.strip()
+                        except:
+                            continue
+                    
+                    if page_texts:
+                        # 使用章节检测器
+                        chapter_boundaries = self.chapter_detector.detect_from_text(page_texts)
+                        
+                        if len(chapter_boundaries) > 1:
+                            split_method = 'smart'
+                            logger.info(f"✅ 智能检测到 {len(chapter_boundaries)} 个章节")
+                        else:
+                            logger.info("⚠️  智能检测未找到章节，使用固定页数")
+                    else:
+                        logger.info("⚠️  无法提取文本，使用固定页数")
+                
+                # 如果没有智能检测结果，使用固定页数
+                if split_method == 'fixed':
+                    num_chapters = (total_pages + self.pages_per_chapter - 1) // self.pages_per_chapter
+                    chapter_boundaries = [i * self.pages_per_chapter for i in range(num_chapters)]
+                    logger.info(f"使用固定页数拆分: {num_chapters} 个章节")
+                
+                # 创建章节
                 chapters = []
-                for chapter_num in range(num_chapters):
-                    start_page = chapter_num * self.pages_per_chapter
-                    end_page = min((chapter_num + 1) * self.pages_per_chapter, total_pages)
+                chapter_details = []
+                
+                for chapter_idx in range(len(chapter_boundaries)):
+                    start_page = chapter_boundaries[chapter_idx]
+                    end_page = chapter_boundaries[chapter_idx + 1] if chapter_idx + 1 < len(chapter_boundaries) else total_pages
+                    
+                    # 提取章节标题（如果可能）
+                    chapter_title = f"第 {chapter_idx + 1} 章"
+                    if start_page < total_pages:
+                        try:
+                            page = pdf_reader.pages[start_page]
+                            text = page.extract_text()
+                            if text:
+                                lines = text.split('\n')
+                                if lines and len(lines[0].strip()) > 3:
+                                    chapter_title = lines[0].strip()[:50]
+                        except:
+                            pass
                     
                     # 创建章节PDF
                     chapter_pdf = PyPDF2.PdfWriter()
@@ -208,25 +276,38 @@ class PDFSplitterFinal:
                         chapter_pdf.add_page(page)
                     
                     # 保存章节文件
-                    chapter_filename = f"{input_path.stem}_chapter_{chapter_num + 1:03d}.pdf"
+                    chapter_filename = f"{input_path.stem}_chapter_{chapter_idx + 1:03d}.pdf"
                     chapter_path = output_dir / chapter_filename
                     
                     with open(chapter_path, 'wb') as chapter_file:
                         chapter_pdf.write(chapter_file)
                     
                     chapters.append(str(chapter_path))
-                    logger.info(f"创建章节 {chapter_num + 1}: {chapter_filename} (页 {start_page+1}-{end_page})")
+                    chapter_details.append({
+                        'chapter_number': chapter_idx + 1,
+                        'start_page': start_page,
+                        'end_page': end_page,
+                        'page_count': end_page - start_page,
+                        'title': chapter_title,
+                        'filename': chapter_filename
+                    })
+                    
+                    logger.info(f"创建章节 {chapter_idx + 1}: {chapter_filename}")
+                    logger.info(f"  页面范围: {start_page + 1}-{end_page} ({end_page - start_page} 页)")
+                    logger.info(f"  章节标题: {chapter_title}")
                 
                 return {
                     'success': True,
                     'total_pages': total_pages,
                     'chapters_created': len(chapters),
                     'chapters': chapters,
-                    'pages_per_chapter': self.pages_per_chapter
+                    'chapter_details': chapter_details,
+                    'split_method': split_method,
+                    'pages_per_chapter': self.pages_per_chapter if split_method == 'fixed' else 'variable'
                 }
                 
         except Exception as e:
-            logger.error(f"基础PDF拆分失败: {e}")
+            logger.error(f"PDF拆分失败: {e}")
             return {'success': False, 'error': str(e)}
     
     def detect_pdf_type(self, pdf_path, detailed=False):
@@ -358,11 +439,19 @@ def main():
     parser.add_argument('--dpi', type=int, default=200,
                        help='OCR图像分辨率 (默认: 200)')
     
+    # 章节检测参数
+    parser.add_argument('--smart', action='store_true',
+                       help='启用智能章节检测（Sprint 3功能）')
+    parser.add_argument('--no-smart', action='store_true',
+                       help='禁用智能章节检测，使用固定页数')
+    
     # 其他功能
     parser.add_argument('--detect-type', action='store_true',
                        help='检测PDF类型')
     parser.add_argument('--test-ocr', action='store_true',
                        help='测试OCR功能')
+    parser.add_argument('--test-smart', action='store_true',
+                       help='测试智能章节检测功能')
     
     args = parser.parse_args()
     
@@ -407,6 +496,64 @@ def main():
         
         return 0
     
+    # 智能检测测试模式
+    if args.test_smart:
+        logger.info("🧪 测试智能章节检测功能...")
+        
+        if splitter.chapter_detector_available:
+            logger.info("✅ 章节检测器可用")
+            
+            # 测试章节检测
+            try:
+                import PyPDF2
+                with open(args.input, 'rb') as f:
+                    pdf_reader = PyPDF2.PdfReader(f)
+                    total_pages = len(pdf_reader.pages)
+                    
+                    # 提取样本文本
+                    page_texts = {}
+                    sample_pages = min(10, total_pages)
+                    
+                    for page_num in range(sample_pages):
+                        try:
+                            page = pdf_reader.pages[page_num]
+                            text = page.extract_text()
+                            if text and len(text.strip()) > 5:
+                                page_texts[page_num] = text.strip()
+                        except:
+                            continue
+                    
+                    if page_texts:
+                        # 分析文档结构
+                        structure = splitter.chapter_detector.analyze_document_structure(page_texts)
+                        
+                        logger.info(f"📊 文档结构分析:")
+                        logger.info(f"   总页数: {structure['total_pages']}")
+                        logger.info(f"   检测章节数: {structure['detected_chapters']}")
+                        logger.info(f"   检测方法: {structure['detection_method']}")
+                        logger.info(f"   置信度: {structure['confidence']:.2f}")
+                        
+                        logger.info(f"\n📝 章节详情:")
+                        for chapter in structure['chapters'][:5]:  # 显示前5章
+                            logger.info(f"   第{chapter['chapter_number']}章: "
+                                      f"页 {chapter['start_page']+1}-{chapter['end_page']}, "
+                                      f"{chapter['page_count']}页, 标题: {chapter['title']}")
+                        
+                        if structure['detection_method'] == 'smart':
+                            logger.info("💡 建议: 使用智能章节检测 (添加 --smart 参数)")
+                        else:
+                            logger.info("💡 建议: 使用固定页数拆分")
+                    else:
+                        logger.warning("⚠️  无法提取文本，智能检测不可用")
+                        logger.info("💡 建议: 使用固定页数或OCR模式")
+            
+            except Exception as e:
+                logger.error(f"智能检测测试失败: {e}")
+        else:
+            logger.error("❌ 章节检测器不可用")
+        
+        return 0
+    
     # PDF类型检测模式
     if args.detect_type:
         logger.info("🔍 检测PDF类型...")
@@ -426,15 +573,21 @@ def main():
     # 执行智能处理
     logger.info(f"每章节页数: {args.pages}")
     logger.info(f"OCR模式: {'启用' if args.ocr else '禁用'}")
+    logger.info(f"智能章节检测: {'启用' if args.smart and not args.no_smart else '禁用'}")
+    
     if args.ocr:
         logger.info(f"OCR语言: {args.ocr_lang}")
         logger.info(f"图像预处理: {'启用' if not args.no_preprocess else '禁用'}")
         logger.info(f"图像分辨率: {args.dpi} DPI")
     
+    # 决定是否使用智能检测
+    use_smart_detection = args.smart and not args.no_smart
+    
     result = splitter.smart_process_pdf(
         args.input,
         args.output,
-        force_ocr=args.force_ocr
+        force_ocr=args.force_ocr,
+        use_smart_detection=use_smart_detection
     )
     
     if result.get('success', False):
