@@ -60,6 +60,13 @@ test_markdown_merge/
 merged_*.md
 test_merged.md
 
+# EPUB转换输出
+test_epub_files/
+test_epub_structure/
+test_text_extraction_output/
+epub_output/
+test_epub_output/
+
 # Logs
 *.log
 logs/
