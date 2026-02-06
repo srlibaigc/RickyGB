@@ -13,6 +13,26 @@ from pathlib import Path
 from datetime import datetime
 import html
 
+# 尝试导入安全的JSON工具
+try:
+    from json_utils import safe_json_loads, safe_json_dumps
+    JSON_UTILS_AVAILABLE = True
+except ImportError:
+    JSON_UTILS_AVAILABLE = False
+    import json
+    
+    # 简单的回退实现
+    def safe_json_loads(text, default=None, verbose=False):
+        if default is None:
+            default = {}
+        try:
+            return json.loads(text)
+        except:
+            return default
+    
+    def safe_json_dumps(obj, ensure_ascii=False, indent=2, **kwargs):
+        return json.dumps(obj, ensure_ascii=ensure_ascii, indent=indent, **kwargs)
+
 class EPUBConverterV1:
     """EPUB转换器 - 基础版本（Sprint 1）"""
     
