@@ -450,7 +450,12 @@ RickyGB 项目已集成 [Fission-AI OpenSpec](https://github.com/Fission-AI/Open
 /opsx:apply
 ```
 
-详细配置见 [OPENSPEC_SETUP.md](OPENSPEC_SETUP.md)
+### DeepSeek Reasoner 支持
+项目已配置 DeepSeek Reasoner 模型的 OpenSpec 支持，配置见 `.deepseek/` 目录。
+
+详细配置见：
+- [OPENSPEC_SETUP.md](OPENSPEC_SETUP.md) - OpenSpec 基础配置
+- [DEEPSEEK_OPENSEPC_CONFIG.md](DEEPSEEK_OPENSEPC_CONFIG.md) - DeepSeek 专用配置
 
 ## 🔗 相关链接
 
