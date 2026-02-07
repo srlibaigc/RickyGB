@@ -77,17 +77,33 @@
   - 项目依赖隔离环境
 
 ### 3. 文档文件
-- **`CHANGELOG_2026-02-07.md`** - 2026年2月7日更新日志
-- **`CODE_OF_CONDUCT.md`** - 社区行为准则
-- **`CONTRIBUTING.md`** - 贡献者指南
-- **`DEEPSEEK_OPENSEPC_CONFIG.md`** - DeepSeek OpenSpec 配置指南
-- **`DIRECTORY_STRUCTURE.md`** - 目录结构说明（本文件）
-- **`LICENSE`** - MIT 许可证
-- **`OPENSPEC_SETUP.md`** - OpenSpec 配置和使用指南
-- **`PROJECT_STRUCTURE.md`** - 项目技术结构说明
-- **`README.md`** - 项目主文档
-- **`TESTING.md`** - 测试指南
-- **`TODO.md`** - 待办事项和未来规划
+- **`README.md`** - 项目主文档（根目录）
+- **`docs/README.md`** - 文档索引
+
+#### 文档目录结构
+```
+docs/
+├── README.md                    # 文档索引
+├── changelogs/                  # 更新日志
+│   └── CHANGELOG_2026-02-07.md # 2026年2月7日更新
+├── guides/                      # 指南文档
+│   ├── TESTING.md              # 测试指南
+│   ├── TODO.md                 # 待办事项
+│   ├── 重构完成报告.md         # 重构总结
+│   ├── README_HEARTBEAT.md     # 心跳检测说明
+│   └── README_PDF_SPLITTER.md  # PDF拆分器说明
+├── legal/                       # 法律和社区
+│   ├── CONTRIBUTING.md         # 贡献者指南
+│   ├── CODE_OF_CONDUCT.md      # 行为准则
+│   └── LICENSE                 # MIT许可证
+├── openspec/                    # OpenSpec配置
+│   ├── OPENSPEC_SETUP.md       # OpenSpec基础配置
+│   └── DEEPSEEK_OPENSEPC_CONFIG.md # DeepSeek配置
+└── structure/                   # 项目结构
+    ├── PROJECT_STRUCTURE.md    # 技术结构说明
+    ├── DIRECTORY_STRUCTURE.md  # 目录结构说明
+    └── CLEANUP_SUMMARY.md      # 清理总结
+```
 
 ### 4. 核心文件
 - **`rickygb.py`** - 统一入口脚本

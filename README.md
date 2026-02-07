@@ -31,16 +31,16 @@ RickyGB是一个Python多功能文档处理工具箱，提供Excel、PDF、EPUB�
 
 ## 📁 项目结构
 
-详细目录结构见 [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md)
+详细目录结构见 [DIRECTORY_STRUCTURE.md](docs/structure/DIRECTORY_STRUCTURE.md)
 
 ```
 /workspaces/RickyGB/
 ├── rickygb.py                    # 统一入口脚本
 ├── README.md                     # 项目主文档
-├── PROJECT_STRUCTURE.md          # 项目技术结构说明
-├── DIRECTORY_STRUCTURE.md        # 目录结构说明
-├── TESTING.md                    # 测试文档
-├── TODO.md                       # 待办事项
+├── docs/structure/PROJECT_STRUCTURE.md          # 项目技术结构说明
+├── docs/structure/DIRECTORY_STRUCTURE.md        # 目录结构说明
+├── docs/guides/TESTING.md                    # 测试文档
+├── docs/guides/TODO.md                       # 待办事项
 │
 ├── src/                          # 源代码目录
 │   ├── __init__.py
@@ -480,15 +480,15 @@ export CLAWDBOT_MODEL="deepseek/deepseek-coder"
 ```
 
 详细配置见：
-- [OPENSPEC_SETUP.md](OPENSPEC_SETUP.md) - OpenSpec 基础配置
-- [DEEPSEEK_OPENSEPC_CONFIG.md](DEEPSEEK_OPENSEPC_CONFIG.md) - DeepSeek 专用配置
+- [OPENSPEC_SETUP.md](docs/openspec/OPENSPEC_SETUP.md) - OpenSpec 基础配置
+- [DEEPSEEK_OPENSEPC_CONFIG.md](docs/openspec/DEEPSEEK_OPENSEPC_CONFIG.md) - DeepSeek 专用配置
 
 ## 🔗 相关链接
 
 - [项目主页](https://github.com/yourusername/RickyGB)
 - [问题追踪](https://github.com/yourusername/RickyGB/issues)
 - [发布版本](https://github.com/yourusername/RickyGB/releases)
-- [贡献指南](CONTRIBUTING.md)
+- [贡献指南](docs/legal/CONTRIBUTING.md)
 
 ---
 
