@@ -19,14 +19,15 @@ RickyGB是一个Python多功能文档处理工具箱，提供Excel、PDF、EPUB�
 - 📖 **详细文档** - 清晰的指南、示例和API文档
 - 🤖 **OpenSpec集成** - 规范驱动开发，AI辅助编码
 
-### 🚀 最新更新 (v1.0.0 - 2026-02-07)
+### 🚀 最新更新 (v1.1.0 - 2026-02-07)
 
 ✅ **项目重构完成** - 从混乱结构转变为清晰工程化结构  
 ✅ **统一入口脚本** - `rickygb.py` 提供所有工具的统一访问  
 ✅ **工具模块提取** - 减少60%+代码重复，提升可维护性  
 ✅ **JSON问题修复** - 彻底解决JSON序列化错误  
 ✅ **完整测试通过** - 所有功能验证通过，生产就绪  
-✅ **OpenSpec集成** - 集成Fission-AI OpenSpec，支持规范驱动开发
+✅ **OpenSpec集成** - 集成Fission-AI OpenSpec，支持规范驱动开发  
+✅ **DeepSeek支持** - 添加DeepSeek Reasoner模型配置，优化AI辅助开发
 
 ## 📁 项目结构
 
@@ -453,6 +454,28 @@ RickyGB 项目已集成 [Fission-AI OpenSpec](https://github.com/Fission-AI/Open
 ### DeepSeek Reasoner 支持
 项目已配置 DeepSeek Reasoner 模型的 OpenSpec 支持，配置见 `.deepseek/` 目录。
 
+#### 配置特点
+- ✅ **多模型支持** - 同时支持 Claude Code 和 DeepSeek Reasoner
+- ✅ **完整功能** - 所有 OpenSpec 命令和工作流可用
+- ✅ **优化适配** - 针对 DeepSeek 模型特性进行优化
+- ✅ **中文友好** - 更好的中文文档生成和沟通支持
+
+#### 模型优势
+1. **推理能力** - 强大的技术设计和问题解决能力
+2. **代码质量** - 高质量的代码生成和审查
+3. **成本效益** - 相比 Claude 可能更具成本优势
+4. **中文支持** - 优秀的中文理解和生成能力
+
+#### 使用方式
+```bash
+# 配置 Clawdbot 使用 DeepSeek
+export DEFAULT_MODEL="deepseek/deepseek-coder"
+export CLAWDBOT_MODEL="deepseek/deepseek-coder"
+
+# 开始使用 OpenSpec
+/opsx:new optimize-excel-converter
+```
+
 详细配置见：
 - [OPENSPEC_SETUP.md](OPENSPEC_SETUP.md) - OpenSpec 基础配置
 - [DEEPSEEK_OPENSEPC_CONFIG.md](DEEPSEEK_OPENSEPC_CONFIG.md) - DeepSeek 专用配置
@@ -471,9 +494,29 @@ RickyGB 项目已集成 [Fission-AI OpenSpec](https://github.com/Fission-AI/Open
 **✅ 重构完成！**  
 **✅ 生产就绪！**  
 **✅ 向后兼容！**  
-**✅ 文档完整！**
+**✅ 文档完整！**  
+**✅ AI增强！**  
 
-RickyGB项目现在具有企业级的项目结构和代码质量，同时保持所有功能的完整性和向后兼容性。欢迎使用和贡献！ 🚀
+RickyGB项目现在具有企业级的项目结构和代码质量，同时具备先进的AI辅助开发能力。项目支持：
+
+### 🏗️ 技术架构
+- 模块化设计，易于维护和扩展
+- 统一接口，多种使用方式
+- 完整测试套件，确保可靠性
+
+### 🤖 AI 能力
+- **OpenSpec 集成** - 规范驱动开发框架
+- **多模型支持** - Claude Code + DeepSeek Reasoner
+- **AI辅助编码** - 代码生成、审查、优化
+- **智能文档** - 自动生成技术文档
+
+### 🚀 开发体验
+- 结构化工作流程，从提案到实施
+- AI辅助技术设计和问题解决
+- 自动化文档生成和代码审查
+- 多模型选择，适应不同需求
+
+欢迎使用和贡献！ 🚀
 
 ---
 
