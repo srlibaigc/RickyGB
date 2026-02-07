@@ -17,6 +17,7 @@ RickyGB是一个Python多功能文档处理工具箱，提供Excel、PDF、EPUB�
 - 📊 **完整工具套件** - Excel、PDF、EPUB、Markdown处理全覆盖
 - 🧪 **测试验证** - 完整的测试套件确保功能可靠性
 - 📖 **详细文档** - 清晰的指南、示例和API文档
+- 🤖 **OpenSpec集成** - 规范驱动开发，AI辅助编码
 
 ### 🚀 最新更新 (v1.0.0 - 2026-02-07)
 
@@ -24,7 +25,8 @@ RickyGB是一个Python多功能文档处理工具箱，提供Excel、PDF、EPUB�
 ✅ **统一入口脚本** - `rickygb.py` 提供所有工具的统一访问  
 ✅ **工具模块提取** - 减少60%+代码重复，提升可维护性  
 ✅ **JSON问题修复** - 彻底解决JSON序列化错误  
-✅ **完整测试通过** - 所有功能验证通过，生产就绪
+✅ **完整测试通过** - 所有功能验证通过，生产就绪  
+✅ **OpenSpec集成** - 集成Fission-AI OpenSpec，支持规范驱动开发
 
 ## 📁 项目结构
 
@@ -396,6 +398,59 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 4. **Q: 项目有API文档吗？**
    A: 正在开发中，目前可以通过查看模块的`__init__.py`和源代码了解API。
+
+## 🤖 OpenSpec 规范驱动开发
+
+RickyGB 项目已集成 [Fission-AI OpenSpec](https://github.com/Fission-AI/OpenSpec)，支持规范驱动开发（SDD）。
+
+### 可用命令
+在 Clawdbot/Claude 中使用以下 OpenSpec 命令：
+
+```bash
+# 开始新变更
+/opsx:new add-excel-batch-processing
+
+# 快速生成规划文档
+/opsx:ff
+
+# 实施任务
+/opsx:apply
+
+# 继续当前变更
+/opsx:continue
+
+# 归档完成变更
+/opsx:archive
+```
+
+### 建议的变更
+1. **高优先级**
+   - `excel-batch-processing` - Excel批量处理增强
+   - `pdf-ocr-improvement` - PDF OCR精度改进
+   - `epub-extractor-refactor` - EPUB提取器重构
+
+2. **中优先级**
+   - `unified-config-system` - 统一配置管理系统
+   - `api-service-integration` - API服务集成
+
+3. **低优先级**
+   - `web-interface` - Web界面开发
+   - `docker-containerization` - Docker容器化
+
+### 快速开始
+```bash
+# 1. 开始新变更
+/opsx:new improve-project-documentation
+
+# 2. 生成规划文档
+/opsx:ff
+
+# 3. 查看并编辑生成的文档
+# 4. 实施变更
+/opsx:apply
+```
+
+详细配置见 [OPENSPEC_SETUP.md](OPENSPEC_SETUP.md)
 
 ## 🔗 相关链接
 
