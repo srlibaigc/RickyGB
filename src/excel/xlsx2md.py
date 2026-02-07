@@ -3,6 +3,7 @@
 XLSX to Markdown Converter
 将Excel文件转换为Markdown格式，便于导入大模型和查看。
 修复版本：支持.xls文件并增加幂等检测
+修复JSON序列化问题
 """
 
 import argparse
@@ -16,6 +17,17 @@ import warnings
 from tqdm import tqdm
 import json
 import hashlib
+
+# 导入安全的JSON工具
+try:
+    from json_utils import safe_json_dumps, safe_json_loads
+    JSON_UTILS_AVAILABLE = True
+except ImportError:
+    JSON_UTILS_AVAILABLE = False
+    # 回退到标准json函数
+    import json
+    safe_json_dumps = json.dumps
+    safe_json_loads = json.loads
 
 warnings.filterwarnings('ignore')
 
@@ -310,7 +322,7 @@ class ExcelToMarkdownConverter:
                 json_match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL)
                 if json_match:
                     try:
-                        summary = json.loads(json_match.group(1))
+                        summary = safe_json_loads(json_match.group(1), default={})
                         if summary.get('file_name') == input_filename:
                             print(f"✓ 检测到已转换文件: {input_filename} (JSON摘要匹配)")
                             return True
@@ -398,7 +410,7 @@ class ExcelToMarkdownConverter:
                     for sheet_name, df in sheets.items()
                 }
             }
-            markdown_content.append(json.dumps(summary, indent=2, ensure_ascii=False))
+            markdown_content.append(safe_json_dumps(summary, indent=2, ensure_ascii=False))
             markdown_content.append("```")
 
             # 写入输出文件
