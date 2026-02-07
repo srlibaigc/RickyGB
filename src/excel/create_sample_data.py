@@ -76,10 +76,17 @@ def create_sample_excel():
         pd.DataFrame(summary_data).to_excel(writer, sheet_name='统计摘要', index=False)
         print("✓ 创建 sample_text.xlsx (带多行文本)")
     
-    # 创建.xls格式文件（旧格式）
-    with pd.ExcelWriter(data_dir / 'sample_old_format.xls', engine='xlwt') as writer:
-        df_small.to_excel(writer, sheet_name='旧格式数据', index=False)
-        print("✓ 创建 sample_old_format.xls (.xls格式)")
+    # 创建.xls格式文件（旧格式）- 使用openpyxl兼容模式
+    try:
+        with pd.ExcelWriter(data_dir / 'sample_old_format.xls', engine='openpyxl') as writer:
+            df_small.to_excel(writer, sheet_name='旧格式数据', index=False)
+            print("✓ 创建 sample_old_format.xls (.xls格式，使用openpyxl)")
+    except Exception as e:
+        print(f"⚠️  创建.xls文件失败: {e}")
+        print("  创建.xlsx替代文件")
+        with pd.ExcelWriter(data_dir / 'sample_compatibility.xlsx', engine='openpyxl') as writer:
+            df_small.to_excel(writer, sheet_name='兼容格式数据', index=False)
+            print("✓ 创建 sample_compatibility.xlsx (兼容格式)")
     
     print(f"\n所有示例文件已创建到: {data_dir.absolute()}")
     print("\n文件列表:")
