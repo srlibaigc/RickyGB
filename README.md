@@ -489,6 +489,7 @@ export CLAWDBOT_MODEL="deepseek/deepseek-coder"
 - [问题追踪](https://github.com/yourusername/RickyGB/issues)
 - [发布版本](https://github.com/yourusername/RickyGB/releases)
 - [贡献指南](docs/legal/CONTRIBUTING.md)
+- [Clawdbot 模型配置指南](docs/guides/CLAWDBOT_MODEL_GUIDE.md)
 
 ---
 
