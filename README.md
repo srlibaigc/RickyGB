@@ -31,11 +31,14 @@ RickyGB是一个Python多功能文档处理工具箱，提供Excel、PDF、EPUB�
 
 ## 📁 项目结构
 
+详细目录结构见 [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md)
+
 ```
 /workspaces/RickyGB/
 ├── rickygb.py                    # 统一入口脚本
 ├── README.md                     # 项目主文档
-├── PROJECT_STRUCTURE.md          # 项目结构说明
+├── PROJECT_STRUCTURE.md          # 项目技术结构说明
+├── DIRECTORY_STRUCTURE.md        # 目录结构说明
 ├── TESTING.md                    # 测试文档
 ├── TODO.md                       # 待办事项
 │
