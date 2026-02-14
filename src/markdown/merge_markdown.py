@@ -4,13 +4,21 @@ Markdown文件合并工具
 将目录下的所有.md文件合并为一个带目录的.md文件
 """
 
-import os
 import sys
 import argparse
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
+
+SRC_ROOT = Path(__file__).resolve().parents[1]
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from utils.logging_utils import setup_logging, get_logger
+
+
+logger = get_logger(__name__)
 
 class MarkdownMerger:
     """Markdown文件合并器"""
@@ -85,7 +93,11 @@ class MarkdownMerger:
             return file_path.stem.replace('_', ' ').replace('-', ' ').title(), "文件名"
             
         except Exception as e:
-            print(f"警告: 无法读取文件 {file_path}: {e}")
+            logger.warning(
+                "提取标题失败，使用文件名兜底 | file=%s | reason=%s",
+                file_path,
+                e,
+            )
             return file_path.stem, "文件名（错误）"
     
     def generate_table_of_contents(self, files: List[Path], base_dir: Path) -> str:
@@ -163,10 +175,10 @@ class MarkdownMerger:
         md_files = self.find_markdown_files(input_dir, recursive)
         
         if not md_files:
-            print(f"警告: 目录中没有找到.md文件: {input_dir}")
+            logger.warning("目录中没有找到Markdown文件 | input_dir=%s", input_dir)
             return {'success': False, 'error': '没有找到.md文件'}
-        
-        print(f"找到 {len(md_files)} 个Markdown文件")
+
+        logger.info("发现Markdown文件 | count=%s | input_dir=%s", len(md_files), input_dir)
         
         # 准备输出
         output_content = []
@@ -249,14 +261,28 @@ class MarkdownMerger:
                 stats['files_processed'].append(file_stats)
                 stats['total_lines'] += file_lines
                 stats['total_size'] += file_size
-                
-                print(f"✅ 处理文件 {i}/{len(md_files)}: {rel_path}")
-                print(f"   标题: {title} ({method})")
-                print(f"   大小: {file_size:,} 字节, 行数: {file_lines}")
-                
+
+                logger.info(
+                    "文件处理完成 | order=%s/%s | relative_path=%s | title=%s | title_source=%s | size_bytes=%s | lines=%s | elapsed_seconds=%.3f",
+                    i,
+                    len(md_files),
+                    rel_path,
+                    title,
+                    method,
+                    file_size,
+                    file_lines,
+                    file_stats['processing_time'],
+                )
+
             except Exception as e:
-                print(f"❌ 处理文件失败: {file_path}")
-                print(f"   错误: {e}")
+                logger.error(
+                    "文件处理失败 | file=%s | order=%s/%s | elapsed_seconds=%.3f | reason=%s",
+                    file_path,
+                    i,
+                    len(md_files),
+                    (datetime.now() - file_start_time).total_seconds(),
+                    e,
+                )
                 
                 # 添加错误信息到输出
                 output_content.append(f"## ❌ 文件处理失败: {file_path.name}\n\n")
@@ -278,13 +304,15 @@ class MarkdownMerger:
             
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(''.join(output_content))
-            
+
             output_size = output_file.stat().st_size
-            print(f"\n✅ 合并完成!")
-            print(f"   输出文件: {output_file}")
-            print(f"   输出大小: {output_size:,} 字节")
-            print(f"   总文件数: {len(md_files)}")
-            print(f"   总行数: {stats['total_lines']:,}")
+            logger.info(
+                "合并输出写入完成 | output_file=%s | output_size_bytes=%s | file_count=%s | total_lines=%s",
+                output_file,
+                output_size,
+                len(md_files),
+                stats['total_lines'],
+            )
             
             stats['success'] = True
             stats['output_size'] = output_size
@@ -293,72 +321,14 @@ class MarkdownMerger:
                                        datetime.fromisoformat(stats['start_time'])).total_seconds()
             
             return stats
-            
+
         except Exception as e:
-            print(f"❌ 写入输出文件失败: {e}")
+            logger.error(
+                "写入输出文件失败 | output_file=%s | reason=%s",
+                output_file,
+                e,
+            )
             return {'success': False, 'error': str(e)}
-    
-    def create_sample_files(self, output_dir: Path, count: int = 5) -> List[Path]:
-        """
-        创建示例Markdown文件（用于测试）
-        
-        Args:
-            output_dir: 输出目录
-            count: 文件数量
-            
-        Returns:
-            创建的文件路径列表
-        """
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        sample_files = []
-        
-        topics = [
-            "Python基础", "数据结构", "算法", "Web开发", "数据库",
-            "机器学习", "DevOps", "测试", "部署", "文档"
-        ]
-        
-        for i in range(min(count, len(topics))):
-            file_name = f"document_{i+1:02d}_{topics[i].replace(' ', '_')}.md"
-            file_path = output_dir / file_name
-            
-            content = f"""# {topics[i]}
-
-## 概述
-
-这是关于{topics[i]}的示例文档。
-
-## 主要内容
-
-1. 基本概念
-2. 核心原理
-3. 实际应用
-4. 最佳实践
-
-## 示例代码
-
-```python
-def example_function():
-    \"\"\"示例函数\"\"\"
-    print("Hello, {topics[i]}!")
-    return True
-```
-
-## 总结
-
-{topics[i]}是一个重要的技术领域，值得深入学习。
-
----
-*生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
-"""
-            
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            
-            sample_files.append(file_path)
-            print(f"创建示例文件: {file_path}")
-        
-        return sample_files
 
 def main():
     """命令行接口"""
@@ -376,8 +346,11 @@ def main():
   # 不生成目录
   python merge_markdown.py --dir . --output simple.md --no-toc
   
-  # 创建示例文件并测试
-  python merge_markdown.py --test --sample-count 3
+  # 输出最终摘要（默认关闭）
+  python merge_markdown.py --dir docs --output combined.md --print-summary
+
+  # 生成示例Markdown文件
+  python generate_sample_markdown.py --output-dir sample_markdown --count 3
         """
     )
     
@@ -394,61 +367,32 @@ def main():
                        help='不生成目录')
     parser.add_argument('--no-separators', action='store_true',
                        help='不添加文件分隔符')
-    
-    # 测试功能
-    parser.add_argument('--test', action='store_true',
-                       help='测试合并功能')
-    parser.add_argument('--sample-count', type=int, default=5,
-                       help='创建示例文件的数量 (默认: 5)')
-    parser.add_argument('--sample-dir', type=str, default='sample_markdown',
-                       help='示例文件目录 (默认: sample_markdown)')
-    
+    parser.add_argument('--log-level', type=str, default='INFO',
+                       choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                       help='日志级别 (默认: INFO)')
+    parser.add_argument('--log-file', type=str, default=None,
+                       help='可选日志文件路径')
+    parser.add_argument('--print-summary', action='store_true',
+                       help='输出CLI最终摘要')
+
     args = parser.parse_args()
-    
+
+    setup_logging(level=args.log_level, log_file=args.log_file)
+
     merger = MarkdownMerger()
-    
-    # 测试模式
-    if args.test:
-        print("🧪 测试Markdown合并功能")
-        
-        # 创建示例目录
-        sample_dir = Path(args.sample_dir)
-        
-        print(f"创建示例文件到: {sample_dir}")
-        sample_files = merger.create_sample_files(sample_dir, args.sample_count)
-        
-        # 测试合并
-        output_file = Path("test_merged.md")
-        
-        print(f"\n🚀 测试合并功能...")
-        result = merger.merge_files(
-            sample_dir,
-            output_file,
-            recursive=True,
-            include_toc=not args.no_toc,
-            add_separators=not args.no_separators
-        )
-        
-        if result.get('success', False):
-            print(f"\n✅ 测试成功!")
-            print(f"   输出文件: {output_file}")
-            print(f"   合并文件: {result['file_count']} 个")
-            print(f"   总行数: {result['total_lines']:,}")
-            return 0
-        else:
-            print(f"\n❌ 测试失败: {result.get('error', '未知错误')}")
-            return 1
-    
+
     # 正常合并模式
     input_dir = Path(args.dir)
     output_file = Path(args.output)
-    
-    print(f"🚀 开始合并Markdown文件")
-    print(f"   输入目录: {input_dir}")
-    print(f"   输出文件: {output_file}")
-    print(f"   递归查找: {'是' if args.recursive else '否'}")
-    print(f"   生成目录: {'是' if not args.no_toc else '否'}")
-    print(f"   文件分隔符: {'是' if not args.no_separators else '否'}")
+
+    logger.info(
+        "开始合并Markdown文件 | input_dir=%s | output_file=%s | recursive=%s | include_toc=%s | add_separators=%s",
+        input_dir,
+        output_file,
+        args.recursive,
+        not args.no_toc,
+        not args.no_separators,
+    )
     
     try:
         result = merger.merge_files(
@@ -458,20 +402,42 @@ def main():
             include_toc=not args.no_toc,
             add_separators=not args.no_separators
         )
-        
+
         if result.get('success', False):
-            print(f"\n✅ 合并完成!")
-            print(f"   输出文件: {output_file}")
-            print(f"   合并文件: {result['file_count']} 个")
-            print(f"   总行数: {result['total_lines']:,}")
-            print(f"   处理时间: {result['processing_time']:.1f} 秒")
+            logger.info(
+                "Markdown合并执行成功 | output_file=%s | file_count=%s | total_lines=%s | processing_time_seconds=%.3f",
+                output_file,
+                result['file_count'],
+                result['total_lines'],
+                result['processing_time'],
+            )
+            if args.print_summary:
+                print(f"✅ 合并完成: {output_file}")
+                print(
+                    f"文件数={result['file_count']} | 总行数={result['total_lines']:,} | "
+                    f"处理时间={result['processing_time']:.1f}s"
+                )
             return 0
         else:
-            print(f"\n❌ 合并失败: {result.get('error', '未知错误')}")
+            logger.error(
+                "Markdown合并执行失败 | input_dir=%s | output_file=%s | reason=%s",
+                input_dir,
+                output_file,
+                result.get('error', '未知错误'),
+            )
+            if args.print_summary:
+                print(f"❌ 合并失败: {result.get('error', '未知错误')}")
             return 1
-            
+
     except Exception as e:
-        print(f"\n💥 合并过程中发生错误: {e}")
+        logger.exception(
+            "合并过程中发生未捕获异常 | input_dir=%s | output_file=%s | reason=%s",
+            input_dir,
+            output_file,
+            e,
+        )
+        if args.print_summary:
+            print(f"💥 合并过程中发生错误: {e}")
         return 1
 
 if __name__ == "__main__":
